@@ -195,7 +195,6 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 : 'Please check your email and click the confirmation link!'
               }
             </p>
-            </h1>
             <p className="text-gray-600 text-sm">
               Your AI-Powered Fitness Journey Starts Here
             </p>
