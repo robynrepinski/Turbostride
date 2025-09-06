@@ -267,7 +267,7 @@ function App() {
   if (!user) {
     return (
       <div className="relative">
-        <AuthScreen onAuthSuccess={handleAuthSuccess} />
+        <AuthScreen />
         <button
           onClick={() => setShowDebug(true)}
           className="fixed bottom-4 right-4 p-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors z-50"

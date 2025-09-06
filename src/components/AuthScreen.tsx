@@ -3,10 +3,10 @@ import { Zap, Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
 import { auth } from '../lib/supabase';
 
 interface AuthScreenProps {
-  onAuthSuccess: () => void;
+  // No props needed - auth state is handled by App component
 }
 
-export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
+export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +35,8 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
       }
       
       // Success - user is now logged in
-      onAuthSuccess();
+      // Auth state change will be handled by App component's listener
+      console.log('✅ [AUTH] Authentication successful');
       
     } catch (err: any) {
       console.error('Auth error:', err);
