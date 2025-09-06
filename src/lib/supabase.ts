@@ -11,20 +11,22 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: false // Disable email confirmation URL detection
   }
 })
 
 // Simple auth helper functions
 export const auth = {
-  // Sign up with email and password
+  // Sign up with email and password - immediately sign in
   signUp: async (email: string, password: string) => {
-    console.log('🔐 [AUTH] Signing up:', email)
+    console.log('🔐 [AUTH] Signing up and logging in:', email)
+    
+    // Sign up without email confirmation
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin
+        emailRedirectTo: undefined // No email confirmation needed
       }
     })
     
@@ -33,7 +35,7 @@ export const auth = {
       throw error
     }
     
-    console.log('✅ [AUTH] Signup successful')
+    console.log('✅ [AUTH] Signup successful, user logged in')
     return data
   },
 
@@ -67,20 +69,8 @@ export const auth = {
     console.log('✅ [AUTH] Signout successful')
   },
 
-  // Get current session
-  getSession: async () => {
-    const { data: { session }, error } = await supabase.auth.getSession()
-    
-    if (error) {
-      console.error('❌ [AUTH] Get session error:', error)
-      return null
-    }
-    
-    return session
-  },
-
   // Get current user
-  getUser: async () => {
+  getCurrentUser: async () => {
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error) {

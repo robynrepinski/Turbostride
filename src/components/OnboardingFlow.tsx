@@ -151,18 +151,18 @@ export default function OnboardingFlow({ onComplete, currentUser }: OnboardingFl
     setIsLoading(true);
     
     try {
-      if (!currentUser) {
-        console.error('❌ [ONBOARDING] No authenticated user found');
-        alert('Authentication error. Please try logging in again.');
-        setIsLoading(false);
-        return;
+      // Get current user from Supabase
+      const user = await auth.getCurrentUser();
+      
+      if (!user) {
+        throw new Error('No authenticated user found');
       }
       
       // Create user profile in Supabase
-      console.log('🎉 [ONBOARDING] Creating user profile for:', currentUser.email);
+      console.log('🎉 [ONBOARDING] Creating user profile for:', user.email);
       
       await createProfile({
-        id: currentUser.id,
+        id: user.id,
         first_name: data.firstName,
         last_name: data.lastName,
         date_of_birth: data.dateOfBirth || undefined,

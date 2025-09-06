@@ -10,7 +10,6 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -23,18 +22,21 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
     try {
       if (isLogin) {
-        // Login flow
+        // Login
         await auth.signIn(email, password);
-        onAuthSuccess();
       } else {
-        // Signup flow
+        // Signup - validate passwords match
         if (password !== confirmPassword) {
           throw new Error('Passwords do not match');
         }
         
+        // Sign up (automatically logs user in)
         await auth.signUp(email, password);
-        setShowEmailConfirmation(true);
       }
+      
+      // Success - user is now logged in
+      onAuthSuccess();
+      
     } catch (err: any) {
       console.error('Auth error:', err);
       setError(err.message || 'An error occurred');
@@ -49,37 +51,6 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     setPassword('');
     setConfirmPassword('');
   };
-
-  // Email confirmation screen
-  if (showEmailConfirmation) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-800 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Mail className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email! 📧</h2>
-          <p className="text-gray-600 mb-4">
-            We've sent a confirmation link to <strong>{email}</strong>
-          </p>
-          <p className="text-gray-500 text-sm mb-6">
-            Click the link in your email to confirm your account, then return here to sign in.
-          </p>
-          <button
-            onClick={() => {
-              setShowEmailConfirmation(false);
-              setIsLogin(true);
-              setPassword('');
-              setConfirmPassword('');
-            }}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200"
-          >
-            Return to Sign In
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-800 flex items-center justify-center p-4">
