@@ -202,7 +202,7 @@ function App() {
     // Force a session check to ensure user state is updated
     setTimeout(async () => {
       try {
-        const { data: { user }, error } = await auth.getCurrentUser();
+        const user = await auth.getCurrentUser();
         if (user && !currentUser) {
           console.log('🔄 [DEBUG] Updating user state after auth success:', user.email);
           setCurrentUser(user);

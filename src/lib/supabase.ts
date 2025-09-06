@@ -56,20 +56,15 @@ export const auth = {
     }
     
     console.log('✅ [AUTH] Signin successful:', data)
-    return data
-  },
-
-  // Sign out
-  signOut: async () => {
-    console.log('🔐 [AUTH] Attempting signout at:', new Date().toISOString())
-    const { error } = await supabase.auth.signOut()
+    const { data: { user }, error } = await supabase.auth.getUser();
     
     if (error) {
-      console.error('❌ [AUTH] Signout error:', error)
-      throw error
+      console.error('❌ [AUTH] Get user error:', error);
+      throw error;
     }
     
-    console.log('✅ [AUTH] Signout successful')
+    console.log('✅ [AUTH] Current user:', user?.email || 'No user');
+    return user;
   },
 
   // Get current session
