@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
+import { auth } from './lib/supabase';
 import AuthScreen from './components/AuthScreen';
 import OnboardingFlow from './components/OnboardingFlow';
 import Header from './components/Header';
@@ -100,6 +101,7 @@ const mockWorkouts = {
 function App() {
   const [currentScreen, setCurrentScreen] = useState('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [workoutFlow, setWorkoutFlow] = useState<'none' | 'overview' | 'active' | 'complete'>('none');
@@ -149,6 +151,51 @@ function App() {
       createdAt: '2024-01-01T00:00:00Z'
     }
   ]);
+
+  useEffect(() => {
+    // Check for existing session on app load
+    const checkSession = async () => {
+      try {
+        const session = await auth.getSession();
+        if (session?.user) {
+          console.log('✅ Found existing session for:', session.user.email);
+          setIsAuthenticated(true);
+        } else {
+          console.log('ℹ️ No existing session found');
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('❌ Session check error:', error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('🔐 User signed in:', session.user.email);
+        setIsAuthenticated(true);
+        setIsLoading(false);
+      } else if (event === 'SIGNED_OUT') {
+        console.log('🔐 User signed out');
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        // Reset app state on logout
+        setCurrentScreen('home');
+        setShowOnboarding(false);
+        setWorkoutFlow('none');
+      }
+    });
+
+    // Cleanup subscription
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const handleStartWorkout = () => {
@@ -207,6 +254,33 @@ function App() {
     console.log('✅ Goals updated successfully!');
   };
 
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      console.log('✅ Logout successful');
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+    }
+  };
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <Zap className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Turbostride</h2>
+          <div className="flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+            <span className="text-gray-600">Loading...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Show auth screen if not authenticated
   if (!isAuthenticated) {
     return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
@@ -253,7 +327,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header currentScreen={currentScreen} />
+      <Header currentScreen={currentScreen} onLogout={handleLogout} />
       <Navigation currentScreen={currentScreen} onScreenChange={setCurrentScreen} />
       
       {/* Main Content */}

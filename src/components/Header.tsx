@@ -1,11 +1,12 @@
 import React from 'react';
-import { Zap } from 'lucide-react';
+import { Zap, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   currentScreen: string;
+  onLogout: () => void;
 }
 
-export default function Header({ currentScreen }: HeaderProps) {
+export default function Header({ currentScreen, onLogout }: HeaderProps) {
   const getScreenTitle = () => {
     switch (currentScreen) {
       case 'home': return 'Dashboard';
@@ -36,6 +37,14 @@ export default function Header({ currentScreen }: HeaderProps) {
           </div>
           
           <div className="flex items-center space-x-3">
+            <button
+              onClick={onLogout}
+              className="hidden md:flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="text-sm font-medium">Sign Out</span>
+            </button>
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
               <span className="text-white text-sm font-semibold">AJ</span>
             </div>

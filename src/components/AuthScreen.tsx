@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Zap, Eye, EyeOff, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { auth } from '../lib/supabase';
 
 interface AuthScreenProps {
   onAuthSuccess: (isSignup?: boolean) => void;
@@ -88,22 +89,54 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     
     setIsLoading(true);
     
-    // Log form data to console
-    console.log('Form submitted:', {
-      mode: isLogin ? 'login' : 'signup',
-      data: formData
-    });
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsLoading(false);
-    setShowSuccess(true);
-    
-    // Show success message then redirect
-    setTimeout(() => {
-      onAuthSuccess(!isLogin);
-    }, 2000);
+    try {
+      if (isLogin) {
+        // Sign in existing user
+        await auth.signIn(formData.email, formData.password);
+        console.log('🎉 Login successful!');
+        onAuthSuccess(false);
+      } else {
+        // Sign up new user
+        const { user } = await auth.signUp(formData.email, formData.password);
+        console.log('🎉 Signup successful!');
+        
+        if (user && !user.email_confirmed_at) {
+          // Show success message for email confirmation
+          setIsLoading(false);
+          setShowSuccess(true);
+          
+          // Don't redirect immediately, let user check email
+          setTimeout(() => {
+            alert('Please check your email and click the confirmation link, then try logging in!');
+            setShowSuccess(false);
+            setIsLogin(true); // Switch to login mode
+          }, 3000);
+        } else {
+          // User is confirmed, proceed
+          onAuthSuccess(true);
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ Auth error:', error);
+      setIsLoading(false);
+      
+      // Show user-friendly error messages
+      let errorMessage = 'An error occurred. Please try again.';
+      
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password. Please check your credentials.';
+      } else if (error.message.includes('User already registered')) {
+        errorMessage = 'An account with this email already exists. Try logging in instead.';
+      } else if (error.message.includes('Password should be at least')) {
+        errorMessage = 'Password should be at least 6 characters long.';
+      } else if (error.message.includes('Unable to validate email address')) {
+        errorMessage = 'Please enter a valid email address.';
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = 'Please check your email and click the confirmation link first.';
+      }
+      
+      alert(errorMessage);
+    }
   };
 
   const toggleMode = () => {
@@ -153,8 +186,15 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl mx-auto mb-4">
               <Zap className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Turbostride
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {isLogin ? 'Welcome Back! 🎉' : 'Account Created! 📧'}
+            </h2>
+            <p className="text-gray-600 mb-4">
+              {isLogin 
+                ? 'Your AI-powered fitness journey continues!' 
+                : 'Please check your email and click the confirmation link!'
+              }
+            </p>
             </h1>
             <p className="text-gray-600 text-sm">
               Your AI-Powered Fitness Journey Starts Here
@@ -356,7 +396,9 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                 </svg>
                 <span className="ml-2">Apple</span>
-              </button>
+              <span className="text-sm text-gray-500">
+                {isLogin ? 'Taking you to your dashboard...' : 'Preparing your account...'}
+              </span>
             </div>
           </div>
 

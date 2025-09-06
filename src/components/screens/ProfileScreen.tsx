@@ -1,7 +1,17 @@
 import React from 'react';
 import { User, Settings, Bell, Shield, HelpCircle, LogOut, Edit3, Camera } from 'lucide-react';
+import { auth } from '../../lib/supabase';
 
 export default function ProfileScreen() {
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      console.log('✅ Logout successful from profile');
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+    }
+  };
+
   const profileStats = [
     { label: 'Member Since', value: 'January 2024' },
     { label: 'Favorite Workout', value: 'Push Day Blast' },
@@ -111,7 +121,10 @@ export default function ProfileScreen() {
       </div>
 
       {/* Sign Out */}
-      <button className="w-full flex items-center justify-center space-x-2 p-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors">
+      <button 
+        onClick={handleLogout}
+        className="w-full flex items-center justify-center space-x-2 p-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors"
+      >
         <LogOut className="w-5 h-5" />
         <span className="font-medium">Sign Out</span>
       </button>
