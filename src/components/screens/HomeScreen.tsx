@@ -1,26 +1,14 @@
 import React from 'react';
 import { Calendar, Flame, Target, Clock, Settings } from 'lucide-react';
-
-interface Goal {
-  id: string;
-  type: 'weight' | 'strength' | 'endurance' | 'habit' | 'custom';
-  title: string;
-  description: string;
-  currentValue: number | string;
-  targetValue: number | string;
-  unit: string;
-  timeline: string;
-  status: 'active' | 'paused' | 'completed';
-  progress: number;
-  createdAt: string;
-}
+import { FitnessGoal } from '../../lib/database';
 
 interface HomeScreenProps {
   onOpenGoalModal: () => void;
-  goals: Goal[];
+  goals: FitnessGoal[];
+  profile: any;
 }
 
-export default function HomeScreen({ onOpenGoalModal, goals }: HomeScreenProps) {
+export default function HomeScreen({ onOpenGoalModal, goals, profile }: HomeScreenProps) {
   const stats = [
     { label: 'Current Streak', value: '7', unit: 'days', icon: Flame, color: 'from-orange-400 to-red-500' },
     { label: 'Total Workouts', value: '23', unit: 'completed', icon: Target, color: 'from-green-400 to-emerald-500' },
@@ -40,7 +28,9 @@ export default function HomeScreen({ onOpenGoalModal, goals }: HomeScreenProps) 
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Welcome back, Alex! 👋</h1>
+        <h1 className="text-2xl font-bold mb-2">
+          Welcome back, {profile?.first_name || 'there'}! 👋
+        </h1>
         <p className="text-blue-100 mb-4">Ready to crush your fitness goals today?</p>
         <button 
           onClick={() => window.dispatchEvent(new CustomEvent('startWorkout'))}
@@ -89,7 +79,7 @@ export default function HomeScreen({ onOpenGoalModal, goals }: HomeScreenProps) 
                   <h3 className="font-semibold text-gray-900">{goal.title}</h3>
                   <div className="flex items-center space-x-4 mt-1">
                     <span className="text-sm text-gray-500">
-                      {goal.currentValue} → {goal.targetValue} {goal.unit}
+                      {goal.current_value} → {goal.target_value} {goal.unit}
                     </span>
                     <span className="text-xs text-blue-600 font-medium">
                       {goal.timeline.replace('-', ' ')}

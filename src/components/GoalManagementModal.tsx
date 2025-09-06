@@ -1,37 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Target, Calendar, Trash2, Edit3, Trophy, Zap, Activity, Scale, Dumbbell, Clock } from 'lucide-react';
-
-interface Goal {
-  id: string;
-  type: 'weight' | 'strength' | 'endurance' | 'habit' | 'custom';
-  title: string;
-  description: string;
-  currentValue: number | string;
-  targetValue: number | string;
-  unit: string;
-  timeline: string;
-  status: 'active' | 'paused' | 'completed';
-  progress: number;
-  createdAt: string;
-}
+import { FitnessGoal } from '../lib/database';
 
 interface GoalManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  goals: Goal[];
-  onSaveGoals: (goals: Goal[]) => void;
+  goals: FitnessGoal[];
+  onSaveGoals: (goals: FitnessGoal[]) => void;
 }
 
 export default function GoalManagementModal({ isOpen, onClose, goals, onSaveGoals }: GoalManagementModalProps) {
   const [activeTab, setActiveTab] = useState<'current' | 'add'>('current');
   const [editingGoal, setEditingGoal] = useState<string | null>(null);
-  const [localGoals, setLocalGoals] = useState<Goal[]>(goals);
-  const [newGoal, setNewGoal] = useState<Partial<Goal>>({
+  const [localGoals, setLocalGoals] = useState<FitnessGoal[]>(goals);
+  const [newGoal, setNewGoal] = useState<Partial<FitnessGoal>>({
     type: 'weight',
     title: '',
     description: '',
-    currentValue: '',
-    targetValue: '',
+    current_value: '',
+    target_value: '',
     unit: '',
     timeline: '3-months',
     status: 'active'
@@ -88,13 +75,13 @@ export default function GoalManagementModal({ isOpen, onClose, goals, onSaveGoal
   ];
 
   const goalTemplates = [
-    { type: 'weight', title: 'Lose 10 lbs', currentValue: 180, targetValue: 170, unit: 'lbs', timeline: '3-months' },
-    { type: 'strength', title: 'Do 25 Push-ups', currentValue: 10, targetValue: 25, unit: 'reps', timeline: '6-months' },
-    { type: 'endurance', title: 'Run 5K', currentValue: 1, targetValue: 3.1, unit: 'miles', timeline: '3-months' },
-    { type: 'habit', title: 'Workout 4x/week', currentValue: 2, targetValue: 4, unit: 'times/week', timeline: 'ongoing' }
+    { type: 'weight', title: 'Lose 10 lbs', current_value: '180', target_value: '170', unit: 'lbs', timeline: '3-months' },
+    { type: 'strength', title: 'Do 25 Push-ups', current_value: '10', target_value: '25', unit: 'reps', timeline: '6-months' },
+    { type: 'endurance', title: 'Run 5K', current_value: '1', target_value: '3.1', unit: 'miles', timeline: '3-months' },
+    { type: 'habit', title: 'Workout 4x/week', current_value: '2', target_value: '4', unit: 'times/week', timeline: 'ongoing' }
   ];
 
-  const updateGoal = (goalId: string, updates: Partial<Goal>) => {
+  const updateGoal = (goalId: string, updates: Partial<FitnessGoal>) => {
     setLocalGoals(prev => prev.map(goal => 
       goal.id === goalId ? { ...goal, ...updates } : goal
     ));
@@ -105,20 +92,22 @@ export default function GoalManagementModal({ isOpen, onClose, goals, onSaveGoal
   };
 
   const addNewGoal = () => {
-    if (!newGoal.title || !newGoal.targetValue) return;
+    if (!newGoal.title || !newGoal.target_value) return;
 
-    const goal: Goal = {
+    const goal: FitnessGoal = {
       id: Date.now().toString(),
-      type: newGoal.type as Goal['type'],
+      user_id: '', // Will be set by the parent component
+      type: newGoal.type as FitnessGoal['type'],
       title: newGoal.title,
       description: newGoal.description || '',
-      currentValue: newGoal.currentValue || 0,
-      targetValue: newGoal.targetValue,
+      current_value: newGoal.current_value || '0',
+      target_value: newGoal.target_value,
       unit: newGoal.unit || '',
       timeline: newGoal.timeline || '3-months',
       status: 'active',
       progress: 0,
-      createdAt: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
     setLocalGoals(prev => [...prev, goal]);
@@ -126,8 +115,8 @@ export default function GoalManagementModal({ isOpen, onClose, goals, onSaveGoal
       type: 'weight',
       title: '',
       description: '',
-      currentValue: '',
-      targetValue: '',
+      current_value: '',
+      target_value: '',
       unit: '',
       timeline: '3-months',
       status: 'active'
@@ -372,7 +361,7 @@ export default function GoalManagementModal({ isOpen, onClose, goals, onSaveGoal
                           <div>
                             <div className="font-semibold text-gray-900">{template.title}</div>
                             <div className="text-sm text-gray-600">
-                              {template.currentValue} → {template.targetValue} {template.unit}
+                              {template.current_value} → {template.target_value} {template.unit}
                             </div>
                           </div>
                         </div>
@@ -442,8 +431,8 @@ export default function GoalManagementModal({ isOpen, onClose, goals, onSaveGoal
                       <label className="block text-sm font-medium text-gray-700 mb-1">Current Value</label>
                       <input
                         type="text"
-                        value={newGoal.currentValue}
-                        onChange={(e) => setNewGoal({ ...newGoal, currentValue: e.target.value })}
+                        value={newGoal.current_value}
+                        onChange={(e) => setNewGoal({ ...newGoal, current_value: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="e.g., 180"
                       />
@@ -453,8 +442,8 @@ export default function GoalManagementModal({ isOpen, onClose, goals, onSaveGoal
                       <label className="block text-sm font-medium text-gray-700 mb-1">Target Value</label>
                       <input
                         type="text"
-                        value={newGoal.targetValue}
-                        onChange={(e) => setNewGoal({ ...newGoal, targetValue: e.target.value })}
+                        value={newGoal.target_value}
+                        onChange={(e) => setNewGoal({ ...newGoal, target_value: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="e.g., 170"
                       />
@@ -477,19 +466,19 @@ export default function GoalManagementModal({ isOpen, onClose, goals, onSaveGoal
                     <textarea
                       value={newGoal.description}
                       onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                      rows={2}
+                      value={goal.target_value}
+                      onChange={(e) => updateGoal(goal.id, { target_value: e.target.value })}
                       placeholder="Describe your goal and why it's important to you..."
                     />
                   </div>
 
                   <button
                     onClick={addNewGoal}
-                    disabled={!newGoal.title || !newGoal.targetValue}
+                    disabled={!newGoal.title || !newGoal.target_value}
                     className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
                   >
                     <Plus className="w-5 h-5 mr-2" />
-                    Add Goal
+                    <div className="text-sm font-semibold">{goal.target_value} {goal.unit}</div>
                   </button>
                 </div>
               </div>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, User, Activity, Target, Settings, Check, Calendar, Scale, Ruler, Clock, Dumbbell } from 'lucide-react';
+import { useProfile } from '../hooks/useProfile';
+import { auth } from '../lib/supabase';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -43,6 +45,9 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
   
+  // Get current user and profile hook
+  const { createProfile } = useProfile(currentUser);
+  
   const [data, setData] = useState<OnboardingData>({
     firstName: '',
     lastName: '',
@@ -65,6 +70,15 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   });
   
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Get current user on mount
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const user = await auth.getCurrentUser();
+      setCurrentUser(user);
+    };
+    getCurrentUser();
+  }, []);
 
   // Load saved data from localStorage on mount
   useEffect(() => {
@@ -144,50 +158,49 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     
     setIsLoading(true);
     
-    // Log all collected data
-    console.log('🎉 Onboarding Complete! Collected Data:', {
-      personalInfo: {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        dateOfBirth: data.dateOfBirth,
-        gender: data.gender
-      },
-      physicalStats: {
+    try {
+      // Create user profile in Supabase
+      console.log('🎉 [ONBOARDING] Creating user profile...');
+      
+      await createProfile({
+        first_name: data.firstName,
+        last_name: data.lastName,
+        date_of_birth: data.dateOfBirth || undefined,
+        gender: data.gender || undefined,
         weight: data.weight,
-        weightUnit: data.weightUnit,
+        weight_unit: data.weightUnit,
         height: data.height,
-        heightUnit: data.heightUnit,
-        heightFeet: data.heightFeet,
-        heightInches: data.heightInches,
-        activityLevel: data.activityLevel,
-        bmi: calculateBMI().toFixed(1)
-      },
-      fitnessGoals: {
-        primaryGoal: data.primaryGoal,
+        height_unit: data.heightUnit,
+        height_feet: data.heightFeet,
+        height_inches: data.heightInches,
+        activity_level: data.activityLevel,
+        primary_goal: data.primaryGoal,
+        target_weight: data.targetWeight,
         timeline: data.timeline,
-        targetWeight: data.targetWeight
-      },
-      preferences: {
-        workoutFrequency: data.workoutFrequency,
-        sessionDuration: data.sessionDuration,
+        workout_frequency: data.workoutFrequency,
+        session_duration: data.sessionDuration,
         equipment: data.equipment,
-        favoriteActivities: data.favoriteActivities
-      }
-    });
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsLoading(false);
-    setShowSuccess(true);
-    
-    // Clear saved onboarding data
-    localStorage.removeItem('turbostride-onboarding');
-    
-    // Redirect after success animation
-    setTimeout(() => {
-      onComplete();
-    }, 2500);
+        favorite_activities: data.favoriteActivities
+      } as any);
+      
+      console.log('✅ [ONBOARDING] Profile created successfully!');
+      
+      setShowSuccess(true);
+      
+      // Clear saved onboarding data
+      localStorage.removeItem('turbostride-onboarding');
+      
+      // Redirect after success animation
+      setTimeout(() => {
+        onComplete();
+      }, 2500);
+      
+    } catch (error: any) {
+      console.error('❌ [ONBOARDING] Error creating profile:', error);
+      alert(`Error creating profile: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (showSuccess) {

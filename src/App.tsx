@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { Zap } from 'lucide-react';
 import { auth } from './lib/supabase';
+import { useProfile } from './hooks/useProfile';
+import { useGoals } from './hooks/useGoals';
+import { workoutService } from './lib/database';
 import AuthScreen from './components/AuthScreen';
 import OnboardingFlow from './components/OnboardingFlow';
 import DebugPanel from './components/DebugPanel';
@@ -15,21 +18,6 @@ import WorkoutOverview from './components/workout/WorkoutOverview';
 import ActiveWorkout from './components/workout/ActiveWorkout';
 import WorkoutComplete from './components/workout/WorkoutComplete';
 import GoalManagementModal from './components/GoalManagementModal';
-
-// Goal interface
-interface Goal {
-  id: string;
-  type: 'weight' | 'strength' | 'endurance' | 'habit' | 'custom';
-  title: string;
-  description: string;
-  currentValue: number | string;
-  targetValue: number | string;
-  unit: string;
-  timeline: string;
-  status: 'active' | 'paused' | 'completed';
-  progress: number;
-  createdAt: string;
-}
 
 // Mock workout data
 const mockWorkouts = {
@@ -113,49 +101,11 @@ function App() {
   const [selectedWorkout, setSelectedWorkout] = useState<any>(null);
   const [workoutData, setWorkoutData] = useState<any>(null);
 
-  // Goal management state
+  // Hooks for data management
+  const { profile, loading: profileLoading, createProfile } = useProfile(currentUser);
+  const { goals, loading: goalsLoading, createGoal, updateGoal, deleteGoal } = useGoals(currentUser);
+  
   const [showGoalModal, setShowGoalModal] = useState(false);
-  const [goals, setGoals] = useState<Goal[]>([
-    {
-      id: '1',
-      type: 'weight',
-      title: 'Lose 15 pounds',
-      description: 'Get to my target weight for summer',
-      currentValue: 180,
-      targetValue: 165,
-      unit: 'lbs',
-      timeline: '6-months',
-      status: 'active',
-      progress: 33,
-      createdAt: '2024-01-15T00:00:00Z'
-    },
-    {
-      id: '2',
-      type: 'strength',
-      title: 'Do 25 Push-ups',
-      description: 'Build upper body strength',
-      currentValue: 12,
-      targetValue: 25,
-      unit: 'reps',
-      timeline: '3-months',
-      status: 'active',
-      progress: 48,
-      createdAt: '2024-02-01T00:00:00Z'
-    },
-    {
-      id: '3',
-      type: 'habit',
-      title: 'Workout 4x per week',
-      description: 'Build consistent exercise habits',
-      currentValue: 3,
-      targetValue: 4,
-      unit: 'times/week',
-      timeline: 'ongoing',
-      status: 'active',
-      progress: 75,
-      createdAt: '2024-01-01T00:00:00Z'
-    }
-  ]);
 
   useEffect(() => {
     // Check for existing session on app load
@@ -205,6 +155,9 @@ function App() {
         console.log('🔐 [DEBUG] User signed in:', session.user.email);
         setCurrentUser(session.user);
         setIsAuthenticated(true);
+        
+        // Check if user needs onboarding
+        // This will be handled by the useProfile hook
         setIsLoading(false);
       } else if (event === 'SIGNED_OUT') {
         console.log('🔐 [DEBUG] User signed out');
@@ -224,6 +177,16 @@ function App() {
     };
   }, []);
 
+  // Check if user needs onboarding after profile loads
+  useEffect(() => {
+    if (currentUser && !profileLoading) {
+      if (!profile && isAuthenticated && !showOnboarding) {
+        console.log('🔍 [APP] No profile found, showing onboarding');
+        setShowOnboarding(true);
+      }
+    }
+  }, [currentUser, profile, profileLoading, isAuthenticated, showOnboarding]);
+
   useEffect(() => {
     const handleStartWorkout = () => {
       setSelectedWorkout(mockWorkouts['push-day-blast']);
@@ -239,12 +202,7 @@ function App() {
     setDebugStep('Authentication successful');
     setIsAuthenticated(true);
     setIsNewUser(isSignup);
-    
-    if (isSignup) {
-      setShowOnboarding(true);
-    } else {
-      setCurrentScreen('home');
-    }
+    // Onboarding will be handled by the profile check effect
   };
 
   const handleOnboardingComplete = () => {
@@ -275,12 +233,34 @@ function App() {
     setCurrentScreen('home');
   };
 
-  const handleSaveGoals = (updatedGoals: Goal[]) => {
-    setGoals(updatedGoals);
-    console.log('🎯 Goals Updated:', updatedGoals);
-    
-    // Show success toast (mock)
-    console.log('✅ Goals updated successfully!');
+  const handleSaveGoals = async (updatedGoals: any[]) => {
+    try {
+      console.log('🎯 [APP] Saving goals:', updatedGoals);
+      
+      // This is a simplified version - in a real app you'd want to handle
+      // creates, updates, and deletes separately for better performance
+      for (const goal of updatedGoals) {
+        if (!goal.user_id) {
+          // New goal
+          await createGoal({
+            type: goal.type,
+            title: goal.title,
+            description: goal.description,
+            current_value: goal.current_value,
+            target_value: goal.target_value,
+            unit: goal.unit,
+            timeline: goal.timeline,
+            status: goal.status,
+            progress: goal.progress
+          });
+        }
+      }
+      
+      console.log('✅ [APP] Goals saved successfully!');
+    } catch (error) {
+      console.error('❌ [APP] Error saving goals:', error);
+      alert('Error saving goals. Please try again.');
+    }
   };
 
   const handleLogout = async () => {
@@ -398,7 +378,7 @@ function App() {
   }
 
   // Show onboarding for new users
-  if (showOnboarding) {
+  if (showOnboarding || (isAuthenticated && !profile && !profileLoading)) {
     return <OnboardingFlow onComplete={handleOnboardingComplete} />;
   }
 
@@ -424,7 +404,7 @@ function App() {
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
-        return <HomeScreen onOpenGoalModal={() => setShowGoalModal(true)} goals={goals} />;
+        return <HomeScreen onOpenGoalModal={() => setShowGoalModal(true)} goals={goals} profile={profile} />;
       case 'workouts':
         return <WorkoutsScreen />;
       case 'progress':
