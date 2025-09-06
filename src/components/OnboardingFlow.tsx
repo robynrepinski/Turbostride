@@ -5,6 +5,7 @@ import { auth } from '../lib/supabase';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
+  currentUser: any;
 }
 
 interface OnboardingData {
@@ -39,7 +40,7 @@ interface FormErrors {
   [key: string]: string;
 }
 
-export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
+export default function OnboardingFlow({ onComplete, currentUser }: OnboardingFlowProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -70,15 +71,6 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   });
   
   const [errors, setErrors] = useState<FormErrors>({});
-
-  // Get current user on mount
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const user = await auth.getCurrentUser();
-      setCurrentUser(user);
-    };
-    getCurrentUser();
-  }, []);
 
   // Load saved data from localStorage on mount
   useEffect(() => {

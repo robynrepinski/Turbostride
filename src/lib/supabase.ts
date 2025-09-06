@@ -29,10 +29,7 @@ export const auth = {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
-        data: {
-          email_confirm: false
-        }
+        emailRedirectTo: window.location.origin
       }
     })
     

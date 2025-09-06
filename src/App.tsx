@@ -379,7 +379,7 @@ function App() {
 
   // Show onboarding for new users
   if (showOnboarding || (isAuthenticated && !profile && !profileLoading)) {
-    return <OnboardingFlow onComplete={handleOnboardingComplete} />;
+    return <OnboardingFlow onComplete={handleOnboardingComplete} currentUser={currentUser} />;
   }
 
   // Show workout flow
