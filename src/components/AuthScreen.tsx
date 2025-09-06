@@ -26,7 +26,8 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showLoginSuccess, setShowLoginSuccess] = useState(false);
+  const [showSignupConfirmation, setShowSignupConfirmation] = useState(false);
   
   const [formData, setFormData] = useState<FormData>({
     email: '',
@@ -94,17 +95,17 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         // Sign in existing user
         const { user } = await auth.signIn(formData.email, formData.password);
         console.log('🎉 Login successful!');
-        onAuthSuccess(false);
+        setShowLoginSuccess(true);
+        setTimeout(() => {
+          onAuthSuccess(false);
+        }, 1500);
       } else {
         // Sign up new user
         const { user } = await auth.signUp(formData.email, formData.password);
         console.log('🎉 Signup successful!');
         
-        // Wait for auth state to update
-        if (user) {
-          console.log('✅ User created:', user.email);
-        }
-        onAuthSuccess(true);
+        // Show confirmation message instead of trying to log in
+        setShowSignupConfirmation(true);
       }
     } catch (error: any) {
       console.error('❌ Auth error:', error);
@@ -141,7 +142,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     });
   };
 
-  if (showSuccess) {
+  if (showLoginSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-800 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
@@ -154,6 +155,35 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             <Loader2 className="w-5 h-5 text-blue-600 animate-spin mr-2" />
             <span className="text-sm text-gray-500">Taking you to your dashboard...</span>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showSignupConfirmation) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-800 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Mail className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email! 📧</h2>
+          <p className="text-gray-600 mb-4">
+            We've sent a confirmation link to <strong>{formData.email}</strong>
+          </p>
+          <p className="text-gray-500 text-sm mb-6">
+            Click the link in your email to confirm your account, then return here to sign in.
+          </p>
+          <button
+            onClick={() => {
+              setShowSignupConfirmation(false);
+              setIsLogin(true);
+              setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+            }}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200"
+          >
+            Return to Sign In
+          </button>
         </div>
       </div>
     );
