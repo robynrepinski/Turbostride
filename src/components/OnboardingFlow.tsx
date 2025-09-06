@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, User, Activity, Target, Settings, Check, Calendar, Scale, Ruler, Clock, Dumbbell } from 'lucide-react';
 import { useProfile } from '../hooks/useProfile';
-import { auth } from '../lib/supabase';
+import { auth, supabase } from '../lib/supabase';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -148,20 +148,24 @@ export default function OnboardingFlow({ onComplete, currentUser }: OnboardingFl
   const handleComplete = async () => {
     if (!validateStep(4)) return;
     
-    if (!currentUser) {
-      console.error('❌ [ONBOARDING] No current user found');
-      alert('Authentication error. Please try logging in again.');
-      return;
-    }
-    
     setIsLoading(true);
     
     try {
+      // Get the current user from Supabase auth directly
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        console.error('❌ [ONBOARDING] No authenticated user found:', userError);
+        alert('Authentication error. Please try logging in again.');
+        setIsLoading(false);
+        return;
+      }
+      
       // Create user profile in Supabase
-      console.log('🎉 [ONBOARDING] Creating user profile for:', currentUser.email);
+      console.log('🎉 [ONBOARDING] Creating user profile for:', user.email);
       
       await createProfile({
-        id: currentUser.id,
+        id: user.id,
         first_name: data.firstName,
         last_name: data.lastName,
         date_of_birth: data.dateOfBirth || undefined,

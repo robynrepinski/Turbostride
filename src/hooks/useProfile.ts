@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { profileService, UserProfile } from '../lib/database';
+import { supabase } from '../lib/supabase';
 
 export function useProfile(user: User | null) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -38,12 +39,20 @@ export function useProfile(user: User | null) {
   };
 
   const createProfile = async (profileData: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>) => {
-    if (!user) throw new Error('No user logged in');
+    // Get current user directly from Supabase if not provided
+    let currentUser = user;
+    if (!currentUser) {
+      const { data: { user: authUser }, error } = await supabase.auth.getUser();
+      if (error || !authUser) {
+        throw new Error('No user logged in');
+      }
+      currentUser = authUser;
+    }
 
     try {
       setLoading(true);
       setError(null);
-      console.log('🔍 [PROFILE] Creating profile for user:', user.id);
+      console.log('🔍 [PROFILE] Creating profile for user:', currentUser.id);
       
       const newProfile = await profileService.createProfile(profileData);
       
