@@ -366,7 +366,8 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 isLogin ? 'Sign In' : 'Create Account'
               )}
             </button>
-          </form>
+            
+          </div>
 
           {/* Social Login Placeholders */}
           <div className="mt-6">
@@ -397,9 +398,12 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 <span className="ml-2">Apple</span>
               </button>
             </div>
-            <span className="text-sm text-gray-500">
-              {isLogin ? 'Taking you to your dashboard...' : 'Preparing your account...'}
-            </span>
+            
+            <div className="mt-3 text-center">
+              <span className="text-sm text-gray-500">
+                {isLogin ? 'Taking you to your dashboard...' : 'Preparing your account...'}
+              </span>
+            </div>
           </div>
 
           {/* Toggle Text */}
