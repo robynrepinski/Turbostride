@@ -393,8 +393,6 @@ function App() {
             onClearData={handleClearData}
           />
         )}
-          </div>
-        </div>
       </div>
     );
   }
