@@ -181,7 +181,7 @@ function App() {
         }
       } catch (error) {
         console.error('❌ [DEBUG] Session check error:', error);
-        setDebugStep(`Session check failed: ${error}`);
+        setDebugStep(`Session check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         setCurrentUser(null);
         setIsAuthenticated(false);
       } finally {
