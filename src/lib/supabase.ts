@@ -7,7 +7,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Create Supabase client with realtime disabled for now
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  realtime: {
+    disabled: true
+  },
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true
+  }
+})
 
 // Auth helper functions
 export const auth = {

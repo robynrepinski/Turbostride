@@ -103,23 +103,21 @@ export default function DebugPanel({
       console.log('🧪 Testing Supabase connection...');
       
       // Test 1: Basic connection
-      const { data: healthCheck, error: healthError } = await supabase
-        .from('_realtime_schema')
-        .select('*')
-        .limit(1);
-      
-      if (healthError) {
-        throw new Error(`Health check failed: ${healthError.message}`);
-      }
-      
-      // Test 2: Auth service
+      // Simple auth test instead of realtime schema
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
-        throw new Error(`Session check failed: ${sessionError.message}`);
+        throw new Error(`Auth test failed: ${sessionError.message}`);
       }
       
-      console.log('✅ Connection test passed!', { healthCheck, session });
+      // Test basic connection by checking if we can call auth
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError && userError.message !== 'Auth session missing!') {
+        throw new Error(`User check failed: ${userError.message}`);
+      }
+      
+      console.log('✅ Connection test passed!', { session, user });
       setConnectionTest('success');
       
     } catch (error: any) {
