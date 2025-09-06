@@ -100,21 +100,8 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         const { user } = await auth.signUp(formData.email, formData.password);
         console.log('🎉 Signup successful!');
         
-        if (user && !user.email_confirmed_at) {
-          // Show success message for email confirmation
-          setIsLoading(false);
-          setShowSuccess(true);
-          
-          // Don't redirect immediately, let user check email
-          setTimeout(() => {
-            alert('Please check your email and click the confirmation link, then try logging in!');
-            setShowSuccess(false);
-            setIsLogin(true); // Switch to login mode
-          }, 3000);
-        } else {
-          // User is confirmed, proceed
-          onAuthSuccess(true);
-        }
+        // For testing - skip email confirmation
+        onAuthSuccess(true);
       }
     } catch (error: any) {
       console.error('❌ Auth error:', error);

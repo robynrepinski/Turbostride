@@ -14,7 +14,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   auth: {
     persistSession: true,
-    autoRefreshToken: true
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+    flowType: 'implicit'
   }
 })
 
@@ -27,7 +29,10 @@ export const auth = {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin
+        emailRedirectTo: window.location.origin,
+        data: {
+          email_confirm: false
+        }
       }
     })
     
