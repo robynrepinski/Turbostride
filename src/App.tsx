@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
+import { Zap } from 'lucide-react';
 import { auth } from './lib/supabase';
 import AuthScreen from './components/AuthScreen';
 import OnboardingFlow from './components/OnboardingFlow';
+import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
 import HomeScreen from './components/screens/HomeScreen';
@@ -102,6 +104,9 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugStep, setDebugStep] = useState('Initializing app...');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [workoutFlow, setWorkoutFlow] = useState<'none' | 'overview' | 'active' | 'complete'>('none');
@@ -155,19 +160,33 @@ function App() {
   useEffect(() => {
     // Check for existing session on app load
     const checkSession = async () => {
+      setDebugStep('Checking for existing session...');
+      console.log('🔍 [DEBUG] Starting session check at:', new Date().toISOString());
+      
       try {
+        setDebugStep('Calling auth.getSession()...');
         const session = await auth.getSession();
+        console.log('🔍 [DEBUG] Session result:', session);
+        
         if (session?.user) {
-          console.log('✅ Found existing session for:', session.user.email);
+          console.log('✅ [DEBUG] Found existing session for:', session.user.email);
+          setDebugStep('Session found, getting user details...');
+          setCurrentUser(session.user);
           setIsAuthenticated(true);
         } else {
-          console.log('ℹ️ No existing session found');
+          console.log('ℹ️ [DEBUG] No existing session found');
+          setDebugStep('No session found, ready for auth');
+          setCurrentUser(null);
           setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('❌ Session check error:', error);
+        console.error('❌ [DEBUG] Session check error:', error);
+        setDebugStep(`Session check failed: ${error}`);
+        setCurrentUser(null);
         setIsAuthenticated(false);
       } finally {
+        setDebugStep('Session check complete');
+        console.log('🔍 [DEBUG] Session check completed at:', new Date().toISOString());
         setIsLoading(false);
       }
     };
@@ -175,13 +194,21 @@ function App() {
     checkSession();
 
     // Listen for auth state changes
+    setDebugStep('Setting up auth state listener...');
+    console.log('🔍 [DEBUG] Setting up auth state change listener');
+    
     const { data: { subscription } } = auth.onAuthStateChange((event, session) => {
+      console.log('🔄 [DEBUG] Auth state changed:', { event, user: session?.user?.email, timestamp: new Date().toISOString() });
+      setDebugStep(`Auth state changed: ${event}`);
+      
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log('🔐 User signed in:', session.user.email);
+        console.log('🔐 [DEBUG] User signed in:', session.user.email);
+        setCurrentUser(session.user);
         setIsAuthenticated(true);
         setIsLoading(false);
       } else if (event === 'SIGNED_OUT') {
-        console.log('🔐 User signed out');
+        console.log('🔐 [DEBUG] User signed out');
+        setCurrentUser(null);
         setIsAuthenticated(false);
         setIsLoading(false);
         // Reset app state on logout
@@ -208,6 +235,8 @@ function App() {
   }, []);
 
   const handleAuthSuccess = (isSignup = false) => {
+    console.log('🎉 [DEBUG] Auth success callback triggered, isSignup:', isSignup);
+    setDebugStep('Authentication successful');
     setIsAuthenticated(true);
     setIsNewUser(isSignup);
     
@@ -255,35 +284,119 @@ function App() {
   };
 
   const handleLogout = async () => {
+    console.log('🔐 [DEBUG] Logout initiated');
+    setDebugStep('Logging out...');
     try {
       await auth.signOut();
-      console.log('✅ Logout successful');
+      console.log('✅ [DEBUG] Logout successful');
+      setDebugStep('Logout complete');
     } catch (error) {
-      console.error('❌ Logout error:', error);
+      console.error('❌ [DEBUG] Logout error:', error);
+      setDebugStep(`Logout failed: ${error}`);
     }
+  };
+
+  const handleSkipAuth = () => {
+    console.log('⚠️ [DEBUG] Skipping auth for development');
+    setIsAuthenticated(true);
+    setIsLoading(false);
+    setCurrentScreen('home');
+    setShowDebug(false);
+  };
+
+  const handleClearData = () => {
+    console.log('🗑️ [DEBUG] Clearing all data and reloading');
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.reload();
   };
 
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center relative">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
             <Zap className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Turbostride</h2>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center mb-4">
             <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
             <span className="text-gray-600">Loading...</span>
           </div>
+          
+          {/* Debug Info */}
+          <div className="mt-6 p-4 bg-gray-100 rounded-lg max-w-md">
+            <div className="text-sm text-gray-700 mb-2">
+              <strong>Current Step:</strong> {debugStep}
+            </div>
+            <div className="text-xs text-gray-500 mb-3">
+              <strong>Auth State:</strong> {isAuthenticated ? 'Authenticated' : 'Not Authenticated'} | 
+              <strong> User:</strong> {currentUser?.email || 'None'}
+            </div>
+            <button
+              onClick={() => setShowDebug(true)}
+              className="px-4 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
+            >
+              🔍 Open Debug Panel
+            </button>
+          </div>
+          
+          {/* Debug Panel */}
+          {showDebug && (
+            <DebugPanel
+              isAuthenticated={isAuthenticated}
+              isLoading={isLoading}
+              currentUser={currentUser}
+              onSkipAuth={handleSkipAuth}
+              onClearData={handleClearData}
+            />
+          )}
         </div>
       </div>
     );
   }
 
-  // Show auth screen if not authenticated
+  // Show debug panel if not authenticated and debug is enabled
+  if (!isAuthenticated && showDebug) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <DebugPanel
+          isAuthenticated={isAuthenticated}
+          isLoading={isLoading}
+          currentUser={currentUser}
+          onSkipAuth={handleSkipAuth}
+          onClearData={handleClearData}
+        />
+      </div>
+    );
+  }
+
+  // Add debug button to auth screen
   if (!isAuthenticated) {
-    return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
+    return (
+      <div className="relative">
+        <AuthScreen onAuthSuccess={handleAuthSuccess} />
+        <button
+          onClick={() => setShowDebug(true)}
+          className="fixed bottom-4 right-4 p-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors z-50"
+        >
+          <span className="text-sm font-bold">🔍</span>
+        </button>
+        
+        {showDebug && (
+          <DebugPanel
+            isAuthenticated={isAuthenticated}
+            isLoading={isLoading}
+            currentUser={currentUser}
+            onSkipAuth={handleSkipAuth}
+            onClearData={handleClearData}
+          />
+        )}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Show onboarding for new users
@@ -327,6 +440,14 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Debug Button */}
+      <button
+        onClick={() => setShowDebug(true)}
+        className="fixed bottom-4 right-4 p-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors z-40"
+      >
+        <span className="text-xs font-bold">🔍</span>
+      </button>
+      
       <Header currentScreen={currentScreen} onLogout={handleLogout} />
       <Navigation currentScreen={currentScreen} onScreenChange={setCurrentScreen} />
       
@@ -344,6 +465,17 @@ function App() {
         goals={goals}
         onSaveGoals={handleSaveGoals}
       />
+      
+      {/* Debug Panel */}
+      {showDebug && (
+        <DebugPanel
+          isAuthenticated={isAuthenticated}
+          isLoading={isLoading}
+          currentUser={currentUser}
+          onSkipAuth={handleSkipAuth}
+          onClearData={handleClearData}
+        />
+      )}
     </div>
   );
 }

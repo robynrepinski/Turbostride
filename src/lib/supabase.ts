@@ -13,7 +13,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export const auth = {
   // Sign up with email and password
   signUp: async (email: string, password: string) => {
-    console.log('🔐 Attempting signup for:', email)
+    console.log('🔐 [AUTH] Attempting signup for:', email, 'at:', new Date().toISOString())
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -23,57 +23,58 @@ export const auth = {
     })
     
     if (error) {
-      console.error('❌ Signup error:', error)
+      console.error('❌ [AUTH] Signup error:', error)
       throw error
     }
     
-    console.log('✅ Signup successful:', data)
+    console.log('✅ [AUTH] Signup successful:', data)
     return data
   },
 
   // Sign in with email and password
   signIn: async (email: string, password: string) => {
-    console.log('🔐 Attempting signin for:', email)
+    console.log('🔐 [AUTH] Attempting signin for:', email, 'at:', new Date().toISOString())
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     })
     
     if (error) {
-      console.error('❌ Signin error:', error)
+      console.error('❌ [AUTH] Signin error:', error)
       throw error
     }
     
-    console.log('✅ Signin successful:', data)
+    console.log('✅ [AUTH] Signin successful:', data)
     return data
   },
 
   // Sign out
   signOut: async () => {
-    console.log('🔐 Attempting signout')
+    console.log('🔐 [AUTH] Attempting signout at:', new Date().toISOString())
     const { error } = await supabase.auth.signOut()
     
     if (error) {
-      console.error('❌ Signout error:', error)
+      console.error('❌ [AUTH] Signout error:', error)
       throw error
     }
     
-    console.log('✅ Signout successful')
+    console.log('✅ [AUTH] Signout successful')
   },
 
   // Get current session
   getSession: async () => {
+    console.log('🔍 [AUTH] Getting session at:', new Date().toISOString())
     const { data: { session }, error } = await supabase.auth.getSession()
     
     if (error) {
-      console.error('❌ Get session error:', error)
+      console.error('❌ [AUTH] Get session error:', error)
       return null
     }
     
     if (session) {
-      console.log('✅ Active session found:', session.user.email)
+      console.log('✅ [AUTH] Active session found:', session.user.email, 'expires:', session.expires_at)
     } else {
-      console.log('ℹ️ No active session')
+      console.log('ℹ️ [AUTH] No active session')
     }
     
     return session
@@ -81,15 +82,16 @@ export const auth = {
 
   // Get current user
   getCurrentUser: async () => {
+    console.log('🔍 [AUTH] Getting current user at:', new Date().toISOString())
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error) {
-      console.error('❌ Get user error:', error)
+      console.error('❌ [AUTH] Get user error:', error)
       return null
     }
     
     if (user) {
-      console.log('✅ Current user:', user.email)
+      console.log('✅ [AUTH] Current user:', user.email, 'id:', user.id)
     }
     
     return user
@@ -97,8 +99,9 @@ export const auth = {
 
   // Listen to auth changes
   onAuthStateChange: (callback: (event: string, session: any) => void) => {
+    console.log('🔍 [AUTH] Setting up auth state change listener')
     return supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔄 Auth state changed:', event, session?.user?.email || 'No user')
+      console.log('🔄 [AUTH] Auth state changed:', event, session?.user?.email || 'No user', 'at:', new Date().toISOString())
       callback(event, session)
     })
   }
