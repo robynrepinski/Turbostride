@@ -1,0 +1,87 @@
+import React from 'react';
+import { Calendar, Flame, Target, Clock } from 'lucide-react';
+
+export default function HomeScreen() {
+  const stats = [
+    { label: 'Current Streak', value: '7', unit: 'days', icon: Flame, color: 'from-orange-400 to-red-500' },
+    { label: 'Total Workouts', value: '23', unit: 'completed', icon: Target, color: 'from-green-400 to-emerald-500' },
+    { label: 'This Week', value: '4', unit: 'sessions', icon: Calendar, color: 'from-blue-400 to-blue-600' },
+    { label: 'Total Time', value: '18.5', unit: 'hours', icon: Clock, color: 'from-purple-400 to-purple-600' },
+  ];
+
+  const recentWorkouts = [
+    { name: 'Push Day Blast', duration: '45 min', difficulty: 'Intermediate', completed: '2 days ago' },
+    { name: 'Cardio Core Burn', duration: '30 min', difficulty: 'Beginner', completed: '4 days ago' },
+    { name: 'Leg Day Thunder', duration: '50 min', difficulty: 'Advanced', completed: '6 days ago' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 text-white">
+        <h1 className="text-2xl font-bold mb-2">Welcome back, Alex! 👋</h1>
+        <p className="text-blue-100 mb-4">Ready to crush your fitness goals today?</p>
+        <button 
+          onClick={() => window.dispatchEvent(new CustomEvent('startWorkout'))}
+          className="bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+        >
+          Start Workout
+        </button>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div key={index} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+              <div className={`w-10 h-10 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center mb-3`}>
+                <Icon className="w-5 h-5 text-white" />
+              </div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
+              <div className="text-sm text-gray-500">{stat.unit}</div>
+              <div className="text-xs text-gray-400 mt-1">{stat.label}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Recent Workouts */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-900">Recent Workouts</h2>
+        </div>
+        <div className="p-6 space-y-4">
+          {recentWorkouts.map((workout, index) => (
+            <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+              <div>
+                <h3 className="font-semibold text-gray-900">{workout.name}</h3>
+                <div className="flex items-center space-x-4 mt-1">
+                  <span className="text-sm text-gray-500">{workout.duration}</span>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    workout.difficulty === 'Beginner' ? 'bg-green-100 text-green-700' :
+                    workout.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {workout.difficulty}
+                  </span>
+                </div>
+              </div>
+              <div className="text-sm text-gray-400">{workout.completed}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 gap-4">
+        <button className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all">
+          Browse Workouts
+        </button>
+        <button className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 transition-all">
+          View Progress
+        </button>
+      </div>
+    </div>
+  );
+}
