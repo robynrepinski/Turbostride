@@ -109,7 +109,7 @@ function App() {
     const initAuth = async () => {
       console.log('🔍 [AUTH] Initializing auth state');
       
-      const session = await auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         console.log('✅ [AUTH] Found existing session:', session.user.email);
         setUser(session.user);
@@ -121,7 +121,7 @@ function App() {
     initAuth();
 
     // Set up auth state listener
-    const { data: { subscription } } = auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('🔄 [AUTH] Auth state changed:', event, session?.user?.email);
       
       if (event === 'SIGNED_IN' && session?.user) {
