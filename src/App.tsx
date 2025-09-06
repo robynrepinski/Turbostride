@@ -198,22 +198,6 @@ function App() {
     console.log('🎉 [DEBUG] Auth success callback triggered, isSignup:', isSignup);
     setDebugStep('Authentication successful');
     setIsNewUser(isSignup);
-    
-    // Wait a moment for auth state to update, then check session
-    setTimeout(async () => {
-      try {
-        const session = await auth.getSession();
-        if (session?.user) {
-          console.log('✅ [DEBUG] Session confirmed after auth success:', session.user.email);
-          setCurrentUser(session.user);
-          setIsAuthenticated(true);
-        } else {
-          console.error('❌ [DEBUG] No session found after auth success');
-        }
-      } catch (error) {
-        console.error('❌ [DEBUG] Error checking session after auth:', error);
-      }
-    }, 500);
   };
 
   const handleOnboardingComplete = () => {
