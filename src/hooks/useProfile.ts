@@ -45,10 +45,7 @@ export function useProfile(user: User | null) {
       setError(null);
       console.log('🔍 [PROFILE] Creating profile for user:', user.id);
       
-      const newProfile = await profileService.createProfile({
-        ...profileData,
-        id: user.id
-      } as any);
+      const newProfile = await profileService.createProfile(profileData);
       
       setProfile(newProfile);
       console.log('✅ [PROFILE] Profile created successfully');

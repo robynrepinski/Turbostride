@@ -126,14 +126,10 @@ function App() {
         } else {
           console.log('ℹ️ [DEBUG] No existing session found');
           setDebugStep('No session found, ready for auth');
-          setCurrentUser(null);
-          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error('❌ [DEBUG] Session check error:', error);
         setDebugStep(`Session check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        setCurrentUser(null);
-        setIsAuthenticated(false);
       } finally {
         setDebugStep('Session check complete');
         console.log('🔍 [DEBUG] Session check completed at:', new Date().toISOString());
@@ -151,13 +147,10 @@ function App() {
       console.log('🔄 [DEBUG] Auth state changed:', { event, user: session?.user?.email, timestamp: new Date().toISOString() });
       setDebugStep(`Auth state changed: ${event}`);
       
-      if (event === 'SIGNED_IN' && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
         console.log('🔐 [DEBUG] User signed in:', session.user.email);
         setCurrentUser(session.user);
         setIsAuthenticated(true);
-        
-        // Check if user needs onboarding
-        // This will be handled by the useProfile hook
         setIsLoading(false);
       } else if (event === 'SIGNED_OUT') {
         console.log('🔐 [DEBUG] User signed out');
@@ -168,6 +161,10 @@ function App() {
         setCurrentScreen('home');
         setShowOnboarding(false);
         setWorkoutFlow('none');
+      } else if (event === 'USER_UPDATED' && session?.user) {
+        console.log('🔐 [DEBUG] User updated:', session.user.email);
+        setCurrentUser(session.user);
+        setIsAuthenticated(true);
       }
     });
 
@@ -200,9 +197,23 @@ function App() {
   const handleAuthSuccess = (isSignup = false) => {
     console.log('🎉 [DEBUG] Auth success callback triggered, isSignup:', isSignup);
     setDebugStep('Authentication successful');
-    setIsAuthenticated(true);
     setIsNewUser(isSignup);
-    // Onboarding will be handled by the profile check effect
+    
+    // Wait a moment for auth state to update, then check session
+    setTimeout(async () => {
+      try {
+        const session = await auth.getSession();
+        if (session?.user) {
+          console.log('✅ [DEBUG] Session confirmed after auth success:', session.user.email);
+          setCurrentUser(session.user);
+          setIsAuthenticated(true);
+        } else {
+          console.error('❌ [DEBUG] No session found after auth success');
+        }
+      } catch (error) {
+        console.error('❌ [DEBUG] Error checking session after auth:', error);
+      }
+    }, 500);
   };
 
   const handleOnboardingComplete = () => {

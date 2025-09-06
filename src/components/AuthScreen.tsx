@@ -92,7 +92,7 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     try {
       if (isLogin) {
         // Sign in existing user
-        await auth.signIn(formData.email, formData.password);
+        const { user } = await auth.signIn(formData.email, formData.password);
         console.log('🎉 Login successful!');
         onAuthSuccess(false);
       } else {
@@ -100,7 +100,10 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         const { user } = await auth.signUp(formData.email, formData.password);
         console.log('🎉 Signup successful!');
         
-        // For testing - skip email confirmation
+        // Wait for auth state to update
+        if (user) {
+          console.log('✅ User created:', user.email);
+        }
         onAuthSuccess(true);
       }
     } catch (error: any) {

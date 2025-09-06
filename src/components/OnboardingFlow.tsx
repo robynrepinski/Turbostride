@@ -148,13 +148,20 @@ export default function OnboardingFlow({ onComplete, currentUser }: OnboardingFl
   const handleComplete = async () => {
     if (!validateStep(4)) return;
     
+    if (!currentUser) {
+      console.error('❌ [ONBOARDING] No current user found');
+      alert('Authentication error. Please try logging in again.');
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
       // Create user profile in Supabase
-      console.log('🎉 [ONBOARDING] Creating user profile...');
+      console.log('🎉 [ONBOARDING] Creating user profile for:', currentUser.email);
       
       await createProfile({
+        id: currentUser.id,
         first_name: data.firstName,
         last_name: data.lastName,
         date_of_birth: data.dateOfBirth || undefined,
