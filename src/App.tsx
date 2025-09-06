@@ -11,6 +11,22 @@ import ProfileScreen from './components/screens/ProfileScreen';
 import WorkoutOverview from './components/workout/WorkoutOverview';
 import ActiveWorkout from './components/workout/ActiveWorkout';
 import WorkoutComplete from './components/workout/WorkoutComplete';
+import GoalManagementModal from './components/GoalManagementModal';
+
+// Goal interface
+interface Goal {
+  id: string;
+  type: 'weight' | 'strength' | 'endurance' | 'habit' | 'custom';
+  title: string;
+  description: string;
+  currentValue: number | string;
+  targetValue: number | string;
+  unit: string;
+  timeline: string;
+  status: 'active' | 'paused' | 'completed';
+  progress: number;
+  createdAt: string;
+}
 
 // Mock workout data
 const mockWorkouts = {
@@ -90,6 +106,50 @@ function App() {
   const [selectedWorkout, setSelectedWorkout] = useState<any>(null);
   const [workoutData, setWorkoutData] = useState<any>(null);
 
+  // Goal management state
+  const [showGoalModal, setShowGoalModal] = useState(false);
+  const [goals, setGoals] = useState<Goal[]>([
+    {
+      id: '1',
+      type: 'weight',
+      title: 'Lose 15 pounds',
+      description: 'Get to my target weight for summer',
+      currentValue: 180,
+      targetValue: 165,
+      unit: 'lbs',
+      timeline: '6-months',
+      status: 'active',
+      progress: 33,
+      createdAt: '2024-01-15T00:00:00Z'
+    },
+    {
+      id: '2',
+      type: 'strength',
+      title: 'Do 25 Push-ups',
+      description: 'Build upper body strength',
+      currentValue: 12,
+      targetValue: 25,
+      unit: 'reps',
+      timeline: '3-months',
+      status: 'active',
+      progress: 48,
+      createdAt: '2024-02-01T00:00:00Z'
+    },
+    {
+      id: '3',
+      type: 'habit',
+      title: 'Workout 4x per week',
+      description: 'Build consistent exercise habits',
+      currentValue: 3,
+      targetValue: 4,
+      unit: 'times/week',
+      timeline: 'ongoing',
+      status: 'active',
+      progress: 75,
+      createdAt: '2024-01-01T00:00:00Z'
+    }
+  ]);
+
   useEffect(() => {
     const handleStartWorkout = () => {
       setSelectedWorkout(mockWorkouts['push-day-blast']);
@@ -139,6 +199,14 @@ function App() {
     setCurrentScreen('home');
   };
 
+  const handleSaveGoals = (updatedGoals: Goal[]) => {
+    setGoals(updatedGoals);
+    console.log('🎯 Goals Updated:', updatedGoals);
+    
+    // Show success toast (mock)
+    console.log('✅ Goals updated successfully!');
+  };
+
   // Show auth screen if not authenticated
   if (!isAuthenticated) {
     return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
@@ -171,7 +239,7 @@ function App() {
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
-        return <HomeScreen />;
+        return <HomeScreen onOpenGoalModal={() => setShowGoalModal(true)} goals={goals} />;
       case 'workouts':
         return <WorkoutsScreen />;
       case 'progress':
@@ -194,6 +262,14 @@ function App() {
           {renderScreen()}
         </div>
       </main>
+
+      {/* Goal Management Modal */}
+      <GoalManagementModal
+        isOpen={showGoalModal}
+        onClose={() => setShowGoalModal(false)}
+        goals={goals}
+        onSaveGoals={handleSaveGoals}
+      />
     </div>
   );
 }

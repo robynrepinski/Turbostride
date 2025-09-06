@@ -1,7 +1,26 @@
 import React from 'react';
-import { Calendar, Flame, Target, Clock } from 'lucide-react';
+import { Calendar, Flame, Target, Clock, Settings } from 'lucide-react';
 
-export default function HomeScreen() {
+interface Goal {
+  id: string;
+  type: 'weight' | 'strength' | 'endurance' | 'habit' | 'custom';
+  title: string;
+  description: string;
+  currentValue: number | string;
+  targetValue: number | string;
+  unit: string;
+  timeline: string;
+  status: 'active' | 'paused' | 'completed';
+  progress: number;
+  createdAt: string;
+}
+
+interface HomeScreenProps {
+  onOpenGoalModal: () => void;
+  goals: Goal[];
+}
+
+export default function HomeScreen({ onOpenGoalModal, goals }: HomeScreenProps) {
   const stats = [
     { label: 'Current Streak', value: '7', unit: 'days', icon: Flame, color: 'from-orange-400 to-red-500' },
     { label: 'Total Workouts', value: '23', unit: 'completed', icon: Target, color: 'from-green-400 to-emerald-500' },
@@ -14,6 +33,8 @@ export default function HomeScreen() {
     { name: 'Cardio Core Burn', duration: '30 min', difficulty: 'Beginner', completed: '4 days ago' },
     { name: 'Leg Day Thunder', duration: '50 min', difficulty: 'Advanced', completed: '6 days ago' },
   ];
+
+  const activeGoals = goals.filter(goal => goal.status === 'active');
 
   return (
     <div className="space-y-6">
@@ -45,6 +66,80 @@ export default function HomeScreen() {
           );
         })}
       </div>
+
+      {/* Goals Section */}
+      {activeGoals.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Your Goals</h2>
+              <button
+                onClick={onOpenGoalModal}
+                className="flex items-center space-x-2 px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="text-sm font-medium">Manage Goals</span>
+              </button>
+            </div>
+          </div>
+          <div className="p-6 space-y-4">
+            {activeGoals.slice(0, 3).map((goal) => (
+              <div key={goal.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900">{goal.title}</h3>
+                  <div className="flex items-center space-x-4 mt-1">
+                    <span className="text-sm text-gray-500">
+                      {goal.currentValue} → {goal.targetValue} {goal.unit}
+                    </span>
+                    <span className="text-xs text-blue-600 font-medium">
+                      {goal.timeline.replace('-', ' ')}
+                    </span>
+                  </div>
+                  <div className="mt-2">
+                    <div className="flex justify-between text-xs text-gray-500 mb-1">
+                      <span>Progress</span>
+                      <span>{goal.progress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${goal.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {activeGoals.length > 3 && (
+              <button
+                onClick={onOpenGoalModal}
+                className="w-full text-center py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium"
+              >
+                View all {activeGoals.length} goals
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Add Goals CTA (if no goals) */}
+      {activeGoals.length === 0 && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
+          <div className="text-center">
+            <Target className="w-12 h-12 text-blue-500 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Set Your Fitness Goals</h3>
+            <p className="text-gray-600 mb-4">
+              Define your targets and track your progress to stay motivated on your fitness journey.
+            </p>
+            <button
+              onClick={onOpenGoalModal}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all"
+            >
+              Set Your First Goal
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Recent Workouts */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
