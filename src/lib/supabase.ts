@@ -56,11 +56,11 @@ export const auth = {
     }
     
     console.log('✅ [AUTH] Signin successful:', data)
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (error) {
-      console.error('❌ [AUTH] Get user error:', error);
-      throw error;
+    if (userError) {
+      console.error('❌ [AUTH] Get user error:', userError);
+      throw userError;
     }
     
     console.log('✅ [AUTH] Current user:', user?.email || 'No user');
