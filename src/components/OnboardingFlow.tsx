@@ -151,21 +151,18 @@ export default function OnboardingFlow({ onComplete, currentUser }: OnboardingFl
     setIsLoading(true);
     
     try {
-      // Get the current user from Supabase auth directly
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !user) {
-        console.error('❌ [ONBOARDING] No authenticated user found:', userError);
+      if (!currentUser) {
+        console.error('❌ [ONBOARDING] No authenticated user found');
         alert('Authentication error. Please try logging in again.');
         setIsLoading(false);
         return;
       }
       
       // Create user profile in Supabase
-      console.log('🎉 [ONBOARDING] Creating user profile for:', user.email);
+      console.log('🎉 [ONBOARDING] Creating user profile for:', currentUser.email);
       
       await createProfile({
-        id: user.id,
+        id: currentUser.id,
         first_name: data.firstName,
         last_name: data.lastName,
         date_of_birth: data.dateOfBirth || undefined,

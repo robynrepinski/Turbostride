@@ -7,24 +7,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Create Supabase client with realtime disabled for now
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  realtime: {
-    disabled: true
-  },
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false,
-    flowType: 'implicit'
+    detectSessionInUrl: true
   }
 })
 
-// Auth helper functions
+// Simple auth helper functions
 export const auth = {
   // Sign up with email and password
   signUp: async (email: string, password: string) => {
-    console.log('🔐 [AUTH] Attempting signup for:', email, 'at:', new Date().toISOString())
+    console.log('🔐 [AUTH] Signing up:', email)
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -38,13 +33,13 @@ export const auth = {
       throw error
     }
     
-    console.log('✅ [AUTH] Signup successful:', data)
+    console.log('✅ [AUTH] Signup successful')
     return data
   },
 
   // Sign in with email and password
   signIn: async (email: string, password: string) => {
-    console.log('🔐 [AUTH] Attempting signin for:', email, 'at:', new Date().toISOString())
+    console.log('🔐 [AUTH] Signing in:', email)
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -55,21 +50,25 @@ export const auth = {
       throw error
     }
     
-    console.log('✅ [AUTH] Signin successful:', data)
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    console.log('✅ [AUTH] Signin successful')
+    return data
+  },
+
+  // Sign out
+  signOut: async () => {
+    console.log('🔐 [AUTH] Signing out')
+    const { error } = await supabase.auth.signOut()
     
-    if (userError) {
-      console.error('❌ [AUTH] Get user error:', userError);
-      throw userError;
+    if (error) {
+      console.error('❌ [AUTH] Signout error:', error)
+      throw error
     }
     
-    console.log('✅ [AUTH] Current user:', user?.email || 'No user');
-    return user;
+    console.log('✅ [AUTH] Signout successful')
   },
 
   // Get current session
   getSession: async () => {
-    console.log('🔍 [AUTH] Getting session at:', new Date().toISOString())
     const { data: { session }, error } = await supabase.auth.getSession()
     
     if (error) {
@@ -77,18 +76,11 @@ export const auth = {
       return null
     }
     
-    if (session) {
-      console.log('✅ [AUTH] Active session found:', session.user.email, 'expires:', session.expires_at)
-    } else {
-      console.log('ℹ️ [AUTH] No active session')
-    }
-    
     return session
   },
 
   // Get current user
-  getCurrentUser: async () => {
-    console.log('🔍 [AUTH] Getting current user at:', new Date().toISOString())
+  getUser: async () => {
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error) {
@@ -96,19 +88,11 @@ export const auth = {
       return null
     }
     
-    if (user) {
-      console.log('✅ [AUTH] Current user:', user.email, 'id:', user.id)
-    }
-    
     return user
   },
 
   // Listen to auth changes
   onAuthStateChange: (callback: (event: string, session: any) => void) => {
-    console.log('🔍 [AUTH] Setting up auth state change listener')
-    return supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔄 [AUTH] Auth state changed:', event, session?.user?.email || 'No user', 'at:', new Date().toISOString())
-      callback(event, session)
-    })
+    return supabase.auth.onAuthStateChange(callback)
   }
 }

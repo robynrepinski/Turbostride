@@ -39,20 +39,14 @@ export function useProfile(user: User | null) {
   };
 
   const createProfile = async (profileData: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>) => {
-    // Get current user directly from Supabase if not provided
-    let currentUser = user;
-    if (!currentUser) {
-      const { data: { user: authUser }, error } = await supabase.auth.getUser();
-      if (error || !authUser) {
-        throw new Error('No user logged in');
-      }
-      currentUser = authUser;
+    if (!user) {
+      throw new Error('No user logged in');
     }
 
     try {
       setLoading(true);
       setError(null);
-      console.log('🔍 [PROFILE] Creating profile for user:', currentUser.id);
+      console.log('🔍 [PROFILE] Creating profile for user:', user.id);
       
       const newProfile = await profileService.createProfile(profileData);
       
