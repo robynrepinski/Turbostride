@@ -13,12 +13,12 @@ export interface UserProfile {
   height_unit: string;
   height_feet?: number;
   height_inches?: number;
-  activity_level?: string;
-  primary_goal?: string;
+  activity_level?: 'sedentary' | 'lightly-active' | 'moderately-active' | 'very-active' | 'extremely-active';
+  primary_goal?: 'weight-loss' | 'muscle-gain' | 'endurance' | 'strength' | 'general-fitness' | 'flexibility';
   target_weight?: number;
-  timeline?: string;
+  timeline?: '4-weeks' | '3-months' | '6-months' | '1-year';
   workout_frequency: number;
-  session_duration?: string;
+  session_duration?: '15min' | '30min' | '45min' | '60min+';
   equipment: string[];
   favorite_activities: string[];
   created_at: string;
